@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
 namespace Bandcamp;
@@ -7,7 +8,7 @@ public class HistoricalRates
 {
     [XmlArray("Cube", Namespace = "http://www.ecb.int/vocabulary/2002-08-01/eurofxref")]
     [XmlArrayItem("Cube")]
-    public DailyRates[] DailyRates { get; set; }
+    public DailyRates[] TimeSeries { get; set; }
 }
 
 public class DailyRates : IComparable<DailyRates>
@@ -35,5 +36,54 @@ public class Rate
     public override string ToString()
     {
         return $"{Value} {Currency}";
+    }
+}
+
+public class Request
+{
+    [JsonPropertyName("username")]
+    public string Username { get; set; }
+
+    [JsonPropertyName("platform")]
+    public string Platform { get; set; }
+
+    [JsonPropertyName("crumb")]
+    public string Crumb { get; set; }
+
+    [JsonPropertyName("last_token")]
+    public string LastToken { get; set; }
+}
+
+public class Page
+{
+    [JsonPropertyName("items")]
+    public List<Purchase> Purchases { get; set; }
+
+    [JsonPropertyName("last_token")]
+    public string LastToken { get; set; }
+}
+
+public class Purchase
+{
+    [JsonPropertyName("item_title")]
+    public string ItemTitle { get; set; }
+
+    [JsonPropertyName("currency")]
+    public string Currency { get; set; }
+
+    [JsonPropertyName("unit_price")]
+    public decimal UnitPrice { get; set; }
+
+    [JsonPropertyName("tax")]
+    public decimal? Tax { get; set; }
+
+    public decimal CalculatePrice()
+    {
+        return UnitPrice + (Tax ?? 0);
+    }
+
+    public override string ToString()
+    {
+        return $"{ItemTitle} ({CalculatePrice()} {Currency})";
     }
 }
