@@ -77,13 +77,11 @@ public class Purchase
     [JsonPropertyName("tax")]
     public decimal? Tax { get; set; }
 
+    [JsonPropertyName("payment_date")]
+    public string PaymentDate { get; set; }
+
     public decimal CalculatePrice()
     {
         return UnitPrice + (Tax ?? 0);
-    }
-
-    public override string ToString()
-    {
-        return $"{ItemTitle} ({CalculatePrice()} {Currency})";
     }
 }

@@ -21,22 +21,21 @@ public class Program
         using var client = new HttpClient(handler) { BaseAddress = new Uri("https://bandcamp.com/") };
         client.DefaultRequestHeaders.Add("Cookie", cookie);
 
-        var totals = new SortedDictionary<string, decimal>();
+        var timeSeries = await GetTimeSeries();
+        var total = 0m;
 
         await foreach (var purchase in GetPurchases(client, username, crumb))
         {
-            Console.WriteLine(purchase);
+            var price = purchase.CalculatePrice();
+            var exchangeRate = GetExchangeRate(timeSeries, purchase);
+            var priceEuro = price / exchangeRate;
+            total += priceEuro;
 
-            totals.TryGetValue(purchase.Currency, out var total);
-            totals[purchase.Currency] = total + purchase.CalculatePrice();
+            Console.WriteLine($"{purchase.ItemTitle} ({price} {purchase.Currency} -> {priceEuro:0.##} EUR)");
         }
 
         Console.WriteLine();
-
-        foreach (var (currency, total) in totals)
-        {
-            Console.WriteLine($"{currency} {total}");
-        }
+        Console.WriteLine($"Total value of your Bandcamp collection: {total:0.##} EUR");
 
         return 0;
     }
@@ -87,5 +86,26 @@ public class Program
         timeSeries.Sort();
 
         return timeSeries;
+    }
+
+    private static decimal GetExchangeRate(List<DailyRates> timeSeries, Purchase purchase)
+    {
+        if (purchase.Currency == "EUR")
+        {
+            return 1;
+        }
+
+        var date = DateTime.Parse(purchase.PaymentDate);
+        var index = timeSeries.BinarySearch(new DailyRates { Date = date });
+
+        if (index < 0)
+        {
+            index = ~index - 1;
+        }
+
+        var rates = timeSeries[index].Rates;
+        var rate = rates.First(rate => rate.Currency == purchase.Currency);
+
+        return rate.Value;
     }
 }
