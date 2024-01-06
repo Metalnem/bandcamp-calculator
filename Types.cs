@@ -80,6 +80,15 @@ public class Purchase
     [JsonPropertyName("payment_date")]
     public string PaymentDate { get; set; }
 
+    [JsonPropertyName("download_url")]
+    public string DownloadUrl { get; set; }
+
+    [JsonPropertyName("band_enabled")]
+    public int? BandEnabled { get; set; }
+
+    [JsonPropertyName("killed")]
+    public int? Killed { get; set; }
+
     public decimal CalculatePrice()
     {
         return UnitPrice + (Tax ?? 0);
